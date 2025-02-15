@@ -1,12 +1,21 @@
-from contract_interaction import log_drone_status
+import threading
+from drone_api import app
+from contract_interaction import listen_to_contract_events
 
-def main():
-    drone_status = "In flight"
-    drone_id = 2  # Example drone ID
+def run_api():
+    app.run(debug=False, host='0.0.0.0', port=5000)
 
-    print("Logging drone status...")
-    tx_hash = log_drone_status(drone_status, drone_id)
-    print(f"Transaction sent with hash: {tx_hash}")
+def run_event_listener():
+    listen_to_contract_events()
 
 if __name__ == "__main__":
-    main()
+    # Create the database if it doesn't exist
+    from database import create_db
+    create_db()
+
+    # Start the Flask API in a separate thread
+    api_thread = threading.Thread(target=run_api)
+    api_thread.start()
+
+    # Start listening to contract events
+    run_event_listener()
